@@ -10,3 +10,4 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 
 | Day |         Puzzle           |            Source             |
 |:---:|:------------------------:|:-----------------------------:|
+|  1  | Trebuchet?!              | [Solution](day1/src/main.rs)  |
