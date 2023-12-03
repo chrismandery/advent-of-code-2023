@@ -1,4 +1,4 @@
-# :christmas_tree: Advent of Code 2023 :christmas_tree:
+# 🎄 Advent of Code 2023 🎄
 
 [![Rust Tests Badge](https://github.com/chrismandery/advent-of-code-2023/actions/workflows/rust.yml/badge.svg)](https://github.com/chrismandery/advent-of-code-2023/actions/workflows/rust.yml)
 
