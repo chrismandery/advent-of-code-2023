@@ -11,6 +11,13 @@ struct GameDraw {
 
 type GameResult = Vec<GameDraw>;
 
+fn calc_minimum_needed_cubes_power(gr: &GameResult) -> usize {
+    let max_red = gr.iter().map(|draw| draw.drawn_red).max().unwrap_or(0);
+    let max_green = gr.iter().map(|draw| draw.drawn_green).max().unwrap_or(0);
+    let max_blue = gr.iter().map(|draw| draw.drawn_blue).max().unwrap_or(0);
+    max_red * max_green * max_blue
+}
+
 fn calc_possible_game_sum(
     games: &[(usize, GameResult)],
     num_red: usize,
@@ -39,9 +46,18 @@ fn check_game_possible(gr: &GameResult, num_red: usize, num_green: usize, num_bl
 
 fn main() -> Result<()> {
     let games = parse_input_file("../inputs/day2_input.txt")?;
+
     println!(
         "Sum of the IDs of all possible games: {}",
         calc_possible_game_sum(&games, 12, 13, 14)
+    );
+
+    println!(
+        "Sum of power for minimum needed cube counts: {}",
+        games
+            .iter()
+            .map(|(_, gr)| calc_minimum_needed_cubes_power(gr))
+            .sum::<usize>(),
     );
 
     Ok(())
@@ -105,5 +121,17 @@ mod tests {
     fn example_first_star() {
         let games = parse_input_file("../inputs/day2_example.txt").unwrap();
         assert_eq!(calc_possible_game_sum(&games, 12, 13, 14), 8);
+    }
+
+    #[test]
+    fn example_second_star() {
+        let games = parse_input_file("../inputs/day2_example.txt").unwrap();
+        assert_eq!(
+            games
+                .iter()
+                .map(|(_, gr)| calc_minimum_needed_cubes_power(gr))
+                .sum::<usize>(),
+            2286
+        );
     }
 }
