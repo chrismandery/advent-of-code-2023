@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1"
-array2d = "0.2"
+regex = "1"
