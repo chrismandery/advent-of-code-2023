@@ -1,4 +1,5 @@
 use anyhow::Result;
+use itertools::Itertools;
 use regex::Regex;
 use std::fs::read_to_string;
 use std::path::Path;
@@ -13,17 +14,39 @@ struct MappingRule {
     range_length: u64,
 }
 
+/// Stupid brute force solution, to be (maybe) optimized later.
+fn brute_force_map_all_seed_ranges(input: &Input) -> u64 {
+    input
+        .seeds
+        .iter()
+        .chunks(2)
+        .into_iter()
+        .map(|mut c| {
+            let start = *c.next().unwrap();
+            let end = start + c.next().unwrap() - 1;
+            println!("Bruteforcing for values {}-{}...", start, end);
+            (start..=end).map(|s| map_seed(input, s)).min().unwrap()
+        })
+        .min()
+        .unwrap()
+}
+
 fn main() -> Result<()> {
     let input = read_input_file("../inputs/day5_input.txt")?;
 
     println!(
-        "Lowest location numbers for any seed: {}",
+        "Lowest location numbers for any seed (first star): {}",
         input
             .seeds
             .iter()
             .map(|s| map_seed(&input, *s))
             .min()
             .unwrap()
+    );
+
+    println!(
+        "Lowest location numbers for all seed ranges (second star): {}",
+        brute_force_map_all_seed_ranges(&input)
     );
 
     Ok(())
@@ -127,6 +150,7 @@ mod tests {
 
     #[test]
     fn example_second_star() {
-        // TODO
+        let input = read_input_file("../inputs/day5_example.txt").unwrap();
+        assert_eq!(brute_force_map_all_seed_ranges(&input), 46);
     }
 }
