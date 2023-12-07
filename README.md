@@ -18,3 +18,4 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 |  4  | Scratchcards                    | [Solution](day4/src/main.rs) |
 |  5  | If You Give A Seed A Fertilizer | [Solution](day5/src/main.rs) |
 |  6  | Wait For It                     | [Solution](day6/src/main.rs) |
+|  7  | Camel Cards                     | [Solution](day7/src/main.rs) |
