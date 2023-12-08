@@ -124,7 +124,7 @@ impl Hand {
                     };
                     h.calc_hand_type_without_joker()
                 })
-                .min()
+                .max()
                 .unwrap()
         } else {
             self.calc_hand_type_without_joker()
@@ -176,14 +176,14 @@ fn calc_total_winnings(mut hands: Vec<Hand>) -> usize {
     hands.sort_unstable();
 
     // For debugging
-    for h in &hands {
+    /* for h in &hands {
         println!(
             "{:?}: {:?} (bid {})",
             h.cards,
             h.calc_hand_type_with_replaced_jokers(),
             h.bid
         )
-    }
+    } */
 
     hands
         .iter()
