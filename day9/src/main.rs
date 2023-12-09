@@ -5,7 +5,7 @@ fn get_next_value_for_history(n: &[i64]) -> i64 {
     let diffs: Vec<i64> = n.windows(2).map(|w| w[1] - w[0]).collect();
 
     let increment = if diffs.iter().all(|d| *d == 0) {
-        // If all diffs are zero, the next value is the last element
+        // If all diffs are zero, the next value is the last (or any other) element
         0
     } else {
         // Calculate increment based on next value for diff history
@@ -15,14 +15,36 @@ fn get_next_value_for_history(n: &[i64]) -> i64 {
     n.last().unwrap() + increment
 }
 
+fn get_previous_value_for_history(n: &[i64]) -> i64 {
+    let diffs: Vec<i64> = n.windows(2).map(|w| w[1] - w[0]).collect();
+
+    let increment = if diffs.iter().all(|d| *d == 0) {
+        // If all diffs are zero, the next value is the last (or any other) element
+        0
+    } else {
+        // Calculate increment based on next value for diff history
+        get_previous_value_for_history(&diffs)
+    };
+
+    n.first().unwrap() - increment
+}
+
 fn main() {
     let input = read_input_file("../inputs/day9_input.txt");
 
     println!(
-        "Sum of all extrapolated values: {}",
+        "Sum of all extrapolated next values: {}",
         input
             .iter()
             .map(|n| get_next_value_for_history(n))
+            .sum::<i64>()
+    );
+
+    println!(
+        "Sum of all extrapolated previous values: {}",
+        input
+            .iter()
+            .map(|n| get_previous_value_for_history(n))
             .sum::<i64>()
     );
 }
@@ -49,13 +71,21 @@ mod tests {
         assert_eq!(
             input
                 .iter()
-                .map(|n| {
-                    let x = get_next_value_for_history(n);
-                    dbg!(&x);
-                    x
-                })
+                .map(|n| get_next_value_for_history(n))
                 .sum::<i64>(),
             114
+        );
+    }
+
+    #[test]
+    fn example_second_star() {
+        let input = read_input_file("../inputs/day9_example.txt");
+        assert_eq!(
+            input
+                .iter()
+                .map(|n| get_previous_value_for_history(n))
+                .sum::<i64>(),
+            2
         );
     }
 }
