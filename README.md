@@ -11,7 +11,7 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 # Links to Solutions
 
 | Day |             Puzzle              |            Source            |
-|:---:|:-------------------------------:|:-----------------------------:|
+|:---:|:-------------------------------:|:----------------------------:|
 |  1  | Trebuchet?!                     | [Solution](day1/src/main.rs) |
 |  2  | Cube Conundrum                  | [Solution](day2/src/main.rs) |
 |  3  | Gear Ratios                     | [Solution](day3/src/main.rs) |
@@ -20,3 +20,4 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 |  6  | Wait For It                     | [Solution](day6/src/main.rs) |
 |  7  | Camel Cards                     | [Solution](day7/src/main.rs) |
 |  8  | Haunted Wasteland               | [Solution](day8/src/main.rs) |
+|  9  | Mirage Maintenance              | [Solution](day9/src/main.rs) |
