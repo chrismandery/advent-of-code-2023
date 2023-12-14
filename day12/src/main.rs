@@ -49,18 +49,46 @@ fn calc_possible_arrangements(input: &[Condition], block_lengths: &[usize]) -> u
     count
 }
 
-fn calc_possible_arrangements_wrapper(input: &(Vec<Condition>, Vec<usize>)) -> usize {
-    calc_possible_arrangements(&input.0, &input.1)
+fn calc_possible_arrangements_wrapper(
+    input: &(Vec<Condition>, Vec<usize>),
+    unfold_five_times: bool,
+) -> usize {
+    if unfold_five_times {
+        let mut input_new = input.0.clone();
+        let mut block_lengths_new = input.1.clone();
+
+        for _ in 0..4 {
+            input_new.push(Condition::Unknown);
+            input_new.append(&mut input.0.clone());
+            block_lengths_new.append(&mut input.1.clone());
+        }
+
+        calc_possible_arrangements(&input_new, &block_lengths_new)
+    } else {
+        calc_possible_arrangements(&input.0, &input.1)
+    }
 }
 
 fn main() {
     let input = read_input_file("../inputs/day12_input.txt");
 
     println!(
-        "Sum of all possible arrangement counts: {}",
+        "Sum of all possible arrangement counts (first star): {}",
         input
             .iter()
-            .map(calc_possible_arrangements_wrapper)
+            .map(|x| calc_possible_arrangements_wrapper(x, false))
+            .sum::<usize>()
+    );
+
+    println!(
+        "Sum of all possible arrangement counts (second star): {}",
+        input
+            .iter()
+            .enumerate()
+            .map(|(i, x)| {
+                println!("Running for {}/{}...", i, input.len());
+                calc_possible_arrangements_wrapper(x, true)
+            })
             .sum::<usize>()
     );
 }
@@ -96,11 +124,59 @@ mod tests {
     fn example_first_star() {
         let input = read_input_file("../inputs/day12_example.txt");
         let mut it = input.iter();
-        assert_eq!(calc_possible_arrangements_wrapper(it.next().unwrap()), 1);
-        assert_eq!(calc_possible_arrangements_wrapper(it.next().unwrap()), 4);
-        assert_eq!(calc_possible_arrangements_wrapper(it.next().unwrap()), 1);
-        assert_eq!(calc_possible_arrangements_wrapper(it.next().unwrap()), 1);
-        assert_eq!(calc_possible_arrangements_wrapper(it.next().unwrap()), 4);
-        assert_eq!(calc_possible_arrangements_wrapper(it.next().unwrap()), 10);
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), false),
+            1
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), false),
+            4
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), false),
+            1
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), false),
+            1
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), false),
+            4
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), false),
+            10
+        );
+    }
+
+    #[test]
+    fn example_second_star() {
+        let input = read_input_file("../inputs/day12_example.txt");
+        let mut it = input.iter();
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), true),
+            1
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), true),
+            16384
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), true),
+            1
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), true),
+            16
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), true),
+            2500
+        );
+        assert_eq!(
+            calc_possible_arrangements_wrapper(it.next().unwrap(), true),
+            506250
+        );
     }
 }
