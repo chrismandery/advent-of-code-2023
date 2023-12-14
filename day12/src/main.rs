@@ -1,3 +1,5 @@
+use indicatif::ParallelProgressIterator;
+use rayon::prelude::*;
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -83,12 +85,9 @@ fn main() {
     println!(
         "Sum of all possible arrangement counts (second star): {}",
         input
-            .iter()
-            .enumerate()
-            .map(|(i, x)| {
-                println!("Running for {}/{}...", i, input.len());
-                calc_possible_arrangements_wrapper(x, true)
-            })
+            .par_iter()
+            .progress_count(input.len() as u64)
+            .map(|x| calc_possible_arrangements_wrapper(x, true))
             .sum::<usize>()
     );
 }
