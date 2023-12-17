@@ -1,19 +1,31 @@
 use indicatif::ParallelProgressIterator;
 use rayon::prelude::*;
+use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::path::Path;
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 enum Condition {
     Operational,
     Damaged,
     Unknown,
 }
 
-fn calc_possible_arrangements(input: &[Condition], block_lengths: &[usize]) -> usize {
+type Cache = HashMap<(Vec<Condition>, Vec<usize>), usize>;
+
+fn calc_possible_arrangements(
+    cache: &mut Cache,
+    input: &[Condition],
+    block_lengths: &[usize],
+) -> usize {
     // If we are done, return 1
     if input.is_empty() && block_lengths.is_empty() {
         return 1;
+    }
+
+    // Check cache (hacked with slow vector creation)
+    if let Some(res) = cache.get(&(input.to_vec(), block_lengths.to_vec())) {
+        return *res;
     }
 
     // Determine count by dynamic programing
@@ -36,7 +48,7 @@ fn calc_possible_arrangements(input: &[Condition], block_lengths: &[usize]) -> u
 
             let new_block_lengths = block_lengths[1..].to_vec();
 
-            count += calc_possible_arrangements(&new_input, &new_block_lengths);
+            count += calc_possible_arrangements(cache, &new_input, &new_block_lengths);
         }
     }
 
@@ -44,9 +56,11 @@ fn calc_possible_arrangements(input: &[Condition], block_lengths: &[usize]) -> u
     if let Some(first) = input.first() {
         if *first != Condition::Damaged {
             let new_input = input[1..].to_vec();
-            count += calc_possible_arrangements(&new_input, block_lengths);
+            count += calc_possible_arrangements(cache, &new_input, block_lengths);
         }
     }
+
+    cache.insert((input.to_vec(), block_lengths.to_vec()), count);
 
     count
 }
@@ -65,9 +79,9 @@ fn calc_possible_arrangements_wrapper(
             block_lengths_new.append(&mut input.1.clone());
         }
 
-        calc_possible_arrangements(&input_new, &block_lengths_new)
+        calc_possible_arrangements(&mut Cache::new(), &input_new, &block_lengths_new)
     } else {
-        calc_possible_arrangements(&input.0, &input.1)
+        calc_possible_arrangements(&mut Cache::new(), &input.0, &input.1)
     }
 }
 
