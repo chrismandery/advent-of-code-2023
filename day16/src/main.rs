@@ -15,12 +15,41 @@ enum Direction {
     Right,
 }
 
+/// Tracks a beam from any possible start position on an edge tile and returns the maximum number of tiles being energized.
+fn find_max_energized(f: &Field) -> usize {
+    let mut max_tiles_energized = 0;
+
+    let last_row = f.num_rows() - 1;
+    let last_col = f.num_columns() - 1;
+
+    for col in 0..=last_col {
+        max_tiles_energized = max_tiles_energized
+            .max(track_beam(f, (0, col), Direction::Down, &mut HashSet::new()).len());
+        max_tiles_energized = max_tiles_energized
+            .max(track_beam(f, (last_row, col), Direction::Up, &mut HashSet::new()).len());
+    }
+
+    for row in 0..=last_row {
+        max_tiles_energized = max_tiles_energized
+            .max(track_beam(f, (row, 0), Direction::Right, &mut HashSet::new()).len());
+        max_tiles_energized = max_tiles_energized
+            .max(track_beam(f, (row, last_col), Direction::Left, &mut HashSet::new()).len());
+    }
+
+    max_tiles_energized
+}
+
 fn main() -> Result<()> {
     let f = read_input_file("../inputs/day16_input.txt")?;
 
     println!(
-        "Energized tiles (first star): {}",
+        "Energized tiles from top left start position (first star): {}",
         track_beam(&f, (0, 0), Direction::Right, &mut HashSet::new()).len()
+    );
+
+    println!(
+        "Maximum energized tiles from any edge tile start position: {}",
+        find_max_energized(&f)
     );
 
     Ok(())
@@ -247,5 +276,11 @@ mod tests {
             track_beam(&f, (0, 0), Direction::Right, &mut HashSet::new()).len(),
             46
         );
+    }
+
+    #[test]
+    fn example_second_star() {
+        let f = read_input_file("../inputs/day16_example.txt").unwrap();
+        assert_eq!(find_max_energized(&f), 51);
     }
 }
