@@ -10,14 +10,21 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 
 # Links to Solutions
 
-| Day |             Puzzle              |            Source            |
-|:---:|:-------------------------------:|:----------------------------:|
-|  1  | Trebuchet?!                     | [Solution](day1/src/main.rs) |
-|  2  | Cube Conundrum                  | [Solution](day2/src/main.rs) |
-|  3  | Gear Ratios                     | [Solution](day3/src/main.rs) |
-|  4  | Scratchcards                    | [Solution](day4/src/main.rs) |
-|  5  | If You Give A Seed A Fertilizer | [Solution](day5/src/main.rs) |
-|  6  | Wait For It                     | [Solution](day6/src/main.rs) |
-|  7  | Camel Cards                     | [Solution](day7/src/main.rs) |
-|  8  | Haunted Wasteland               | [Solution](day8/src/main.rs) |
-|  9  | Mirage Maintenance              | [Solution](day9/src/main.rs) |
+| Day |             Puzzle              |            Source             |
+|:---:|:-------------------------------:|:-----------------------------:|
+|  1  | Trebuchet?!                     | [Solution](day1/src/main.rs)  |
+|  2  | Cube Conundrum                  | [Solution](day2/src/main.rs)  |
+|  3  | Gear Ratios                     | [Solution](day3/src/main.rs)  |
+|  4  | Scratchcards                    | [Solution](day4/src/main.rs)  |
+|  5  | If You Give A Seed A Fertilizer | [Solution](day5/src/main.rs)  |
+|  6  | Wait For It                     | [Solution](day6/src/main.rs)  |
+|  7  | Camel Cards                     | [Solution](day7/src/main.rs)  |
+|  8  | Haunted Wasteland               | [Solution](day8/src/main.rs)  |
+|  9  | Mirage Maintenance              | [Solution](day9/src/main.rs)  |
+| 10  | Pipe Maze                       | [Solution](day10/src/main.rs) |
+| 11  | Cosmic Expansion                | [Solution](day11/src/main.rs) |
+| 12  | Hot Springs                     | [Solution](day12/src/main.rs) |
+| 13  | Point of Incidence              | [Solution](day13/src/main.rs) |
+| 14  | Parabolic Reflector Dish        | [Solution](day14/src/main.rs) |
+| 15  | Lens Library                    | [Solution](day15/src/main.rs) |
+| 16  | The Floor Will Be Lava          | [Solution](day16/src/main.rs) |
