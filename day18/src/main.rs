@@ -6,7 +6,6 @@ use std::path::Path;
 struct Input {
     direction: char,
     step_size: usize,
-    color: String,
 }
 
 fn calc_total_area(input: &[Input]) -> usize {
@@ -27,7 +26,7 @@ fn calc_total_area(input: &[Input]) -> usize {
     // Add exterior tiles: This area has already been counted half by the Shoelace formula, so we are adding the other half here
     area += input.iter().map(|instr| instr.step_size).sum::<usize>() as isize / 2;
 
-    // add one for the final exterior tile (starting position)
+    // Add one for the final exterior tile (starting position)
     area as usize + 1
 }
 
@@ -62,14 +61,22 @@ fn calc_vertex_positions(input: &[Input]) -> Vec<(isize, isize)> {
 }
 
 fn main() -> Result<()> {
-    let input = read_input_file("../inputs/day18_input.txt")?;
+    let input = read_input_file("../inputs/day18_input.txt", false)?;
+    println!(
+        "Interior area when ignoring the colors (first star): {}",
+        calc_total_area(&input)
+    );
 
-    println!("Interior area (first star): {}", calc_total_area(&input));
+    let input = read_input_file("../inputs/day18_input.txt", true)?;
+    println!(
+        "Interior area when using the color information (second star): {}",
+        calc_total_area(&input)
+    );
 
     Ok(())
 }
 
-fn read_input_file<P: AsRef<Path>>(input_path: P) -> Result<Vec<Input>> {
+fn read_input_file<P: AsRef<Path>>(input_path: P, parse_colors: bool) -> Result<Vec<Input>> {
     let regex = Regex::new(r"^([UDLR]) (\d+) \(#([0-9a-z]{6})\)$").unwrap();
 
     let input = read_to_string(input_path)?;
@@ -77,11 +84,24 @@ fn read_input_file<P: AsRef<Path>>(input_path: P) -> Result<Vec<Input>> {
         .lines()
         .map(|l| {
             if let Some(cap) = regex.captures(l) {
-                Ok(Input {
-                    direction: cap.get(1).unwrap().as_str().chars().next().unwrap(),
-                    step_size: cap.get(2).unwrap().as_str().parse().unwrap(),
-                    color: cap.get(3).unwrap().as_str().to_owned(),
-                })
+                if parse_colors {
+                    let color = cap.get(3).unwrap().as_str();
+
+                    Ok(Input {
+                        direction: match color.chars().last().unwrap() {
+                            '0' => 'R',
+                            '1' => 'D',
+                            '2' => 'L',
+                            _ => 'U',
+                        },
+                        step_size: usize::from_str_radix(&color[0..5], 16).unwrap(),
+                    })
+                } else {
+                    Ok(Input {
+                        direction: cap.get(1).unwrap().as_str().chars().next().unwrap(),
+                        step_size: cap.get(2).unwrap().as_str().parse().unwrap(),
+                    })
+                }
             } else {
                 Err(anyhow!("Could not parse line with regex: {}", l))
             }
@@ -97,7 +117,13 @@ mod tests {
 
     #[test]
     fn example_first_star() {
-        let input = read_input_file("../inputs/day18_example.txt").unwrap();
+        let input = read_input_file("../inputs/day18_example.txt", false).unwrap();
         assert_eq!(calc_total_area(&input), 62);
+    }
+
+    #[test]
+    fn example_second_star() {
+        let input = read_input_file("../inputs/day18_example.txt", true).unwrap();
+        assert_eq!(calc_total_area(&input), 952408144115);
     }
 }
