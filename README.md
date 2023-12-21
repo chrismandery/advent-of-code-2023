@@ -31,3 +31,5 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 | 17  | Clumsy Crucible                 | [Solution](day17/src/main.rs) |
 | 18  | Lavaduct Lagoon                 | [Solution](day18/src/main.rs) |
 | 19  | Aplenty                         | [Solution](day19/src/main.rs) |
+| 20  | Pulse Propagation               | TODO                          |
+| 21  | Step Counter                    | TODO                          |
