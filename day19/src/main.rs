@@ -118,7 +118,7 @@ fn count_accepted_parts_recursive(
             if range.1 < rule.threshold {
                 // The whole range is below the threshold -> the condition is fulfilled in all cases
                 count_accepted_parts_recursive(wl, pr, &rule.target, 0)
-            } else if range.1 >= rule.threshold {
+            } else if range.0 >= rule.threshold {
                 // The whole range is above/equal the threshold -> the condition is fulfilled in none of the cases
                 count_accepted_parts_recursive(wl, pr, workflow_name, rule_num + 1)
             } else {
@@ -247,5 +247,14 @@ mod tests {
         assert!(!check_part_accepted(&workflows, &parts[3]));
         assert!(check_part_accepted(&workflows, &parts[4]));
         assert_eq!(get_accepted_parts_category_sum(&workflows, &parts), 19114);
+    }
+
+    #[test]
+    fn example_second_star() {
+        let (workflows, _) = read_input_file("../inputs/day19_example.txt").unwrap();
+        assert_eq!(
+            count_accepted_parts(&workflows, &[(1, 4000), (1, 4000), (1, 4000), (1, 4000)]),
+            167409079868000
+        );
     }
 }

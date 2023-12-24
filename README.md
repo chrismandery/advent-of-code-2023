@@ -30,7 +30,7 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 | 16  | The Floor Will Be Lava          | [Solution](day16/src/main.rs) |
 | 17  | Clumsy Crucible                 | [Solution](day17/src/main.rs) |
 | 18  | Lavaduct Lagoon                 | [Solution](day18/src/main.rs) |
-| 19  | Aplenty                         | [Solution](day19/src/main.rs) - second star missing |
+| 19  | Aplenty                         | [Solution](day19/src/main.rs) |
 | 20  | Pulse Propagation               | TODO                          |
 | 21  | Step Counter                    | [Solution](day19/src/main.rs) - second star missing |
 | 22  | Sand Slabs                      | [Solution](day22/src/main.rs) |
