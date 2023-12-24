@@ -20,6 +20,14 @@ struct Workflow {
 
 type WorkflowList = HashMap<String, Workflow>;
 type Part = [u64; 4];
+type PartRange = [(u64, u64); 4];
+
+fn calc_combinations(pr: &PartRange) -> u64 {
+    (pr[0].1 - pr[0].0 + 1)
+        * (pr[1].1 - pr[1].0 + 1)
+        * (pr[2].1 - pr[2].0 + 1)
+        * (pr[3].1 - pr[3].0 + 1)
+}
 
 fn check_part_accepted(wl: &WorkflowList, part: &Part) -> bool {
     check_part_accepted_recursive(wl, part, "in", 0)
@@ -64,6 +72,72 @@ fn check_part_accepted_recursive(
     }
 }
 
+fn count_accepted_parts(wl: &WorkflowList, pr: &PartRange) -> u64 {
+    count_accepted_parts_recursive(wl, pr, "in", 0)
+}
+
+fn count_accepted_parts_recursive(
+    wl: &WorkflowList,
+    pr: &PartRange,
+    workflow_name: &str,
+    rule_num: usize,
+) -> u64 {
+    if workflow_name == "A" {
+        return calc_combinations(pr);
+    } else if workflow_name == "R" {
+        return 0;
+    };
+
+    let workflow = wl
+        .get(workflow_name)
+        .unwrap_or_else(|| panic!("Workflow {} not found!", workflow_name));
+
+    if let Some(rule) = workflow.rules.get(rule_num) {
+        let range = pr[rule.category as usize];
+
+        #[allow(clippy::collapsible_else_if)]
+        if rule.has_to_be_larger {
+            if range.0 > rule.threshold {
+                // The whole range is above the threshold -> the condition is fulfilled in all cases
+                count_accepted_parts_recursive(wl, pr, &rule.target, 0)
+            } else if range.1 <= rule.threshold {
+                // The whole range is below/equal the threshold -> the condition is fulfilled in none of the cases
+                count_accepted_parts_recursive(wl, pr, workflow_name, rule_num + 1)
+            } else {
+                // Split interval into two cases and handle them separately
+                let mut pr_true = *pr;
+                pr_true[rule.category as usize].0 = rule.threshold + 1;
+
+                let mut pr_false = *pr;
+                pr_false[rule.category as usize].1 = rule.threshold;
+
+                count_accepted_parts_recursive(wl, &pr_true, &rule.target, 0)
+                    + count_accepted_parts_recursive(wl, &pr_false, workflow_name, rule_num + 1)
+            }
+        } else {
+            if range.1 < rule.threshold {
+                // The whole range is below the threshold -> the condition is fulfilled in all cases
+                count_accepted_parts_recursive(wl, pr, &rule.target, 0)
+            } else if range.1 >= rule.threshold {
+                // The whole range is above/equal the threshold -> the condition is fulfilled in none of the cases
+                count_accepted_parts_recursive(wl, pr, workflow_name, rule_num + 1)
+            } else {
+                // Split interval into two cases and handle them separately
+                let mut pr_true = *pr;
+                pr_true[rule.category as usize].1 = rule.threshold - 1;
+
+                let mut pr_false = *pr;
+                pr_false[rule.category as usize].0 = rule.threshold;
+
+                count_accepted_parts_recursive(wl, &pr_true, &rule.target, 0)
+                    + count_accepted_parts_recursive(wl, &pr_false, workflow_name, rule_num + 1)
+            }
+        }
+    } else {
+        count_accepted_parts_recursive(wl, pr, &workflow.default_target, 0)
+    }
+}
+
 fn get_accepted_parts_category_sum(wl: &WorkflowList, parts: &[Part]) -> u64 {
     parts
         .iter()
@@ -78,6 +152,11 @@ fn main() -> Result<()> {
     println!(
         "Sum of categories for all accepted parts (first star): {}",
         get_accepted_parts_category_sum(&workflows, &parts)
+    );
+
+    println!(
+        "Total number of accepted parts (second star): {}",
+        count_accepted_parts(&workflows, &[(1, 4000), (1, 4000), (1, 4000), (1, 4000)])
     );
 
     Ok(())
