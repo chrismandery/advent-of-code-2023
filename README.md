@@ -33,5 +33,5 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 | 19  | Aplenty                         | [Solution](day19/src/main.rs) - second star missing |
 | 20  | Pulse Propagation               | TODO                          |
 | 21  | Step Counter                    | [Solution](day19/src/main.rs) - second star missing |
-| 22  | Sand Slabs                      | TODO                          |
+| 22  | Sand Slabs                      | [Solution](day22/src/main.rs) |
 | 23  | A Long Walk                     | [Solution](day23/src/main.rs) |

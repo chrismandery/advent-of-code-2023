@@ -1,4 +1,5 @@
 use regex::Regex;
+use std::collections::HashSet;
 use std::fs::read_to_string;
 use std::path::Path;
 
@@ -32,14 +33,49 @@ impl Brick {
     }
 }
 
+/// Determines how many other bricks would start to fall in the chain reaction triggered off by removing a brick. We calculate this by
+/// extending a list of unstable (= removed) bricks, iteratively adding bricks until the list does not change anymore.
+fn chain_reaction_size(brick: &Brick, all_bricks: &[Brick]) -> usize {
+    let mut unstable_bricks = HashSet::new();
+    unstable_bricks.insert(brick.id);
+
+    loop {
+        let mut stable = true;
+
+        // Search for bricks that are supported only by unstable bricks (and neither in unstable_bricks already nor on the floor)
+        for brick in all_bricks {
+            if !unstable_bricks.contains(&brick.id)
+                && brick.z_range.0 != 1
+                && brick
+                    .supported_by
+                    .iter()
+                    .all(|id| unstable_bricks.contains(id))
+            {
+                unstable_bricks.insert(brick.id);
+                stable = false;
+            }
+        }
+
+        if stable {
+            return unstable_bricks.len() - 1; // Originating brick is not counted
+        }
+    }
+}
+
+/// Checks whether this brick can be removed, i.e., no other brick is supported only by this brick. (equal to chain_reaction_size() == 1
+/// for the first part of the puzzle).
+fn check_brick_can_be_removed(brick: &Brick, all_bricks: &[Brick]) -> bool {
+    !all_bricks.iter().any(|b| b.supported_by == [brick.id])
+}
+
 /// Lets the given brick fall down and returns it final resting position.
 fn get_brick_resting_position(brick: &Brick, all_bricks: &[Brick]) -> Brick {
     let mut cur = brick.clone();
 
     loop {
-        // Check if brick has reached the floor and cannot drop further
+        // Check if brick has reached the floor and cannot drop further (supported_by is empty in that case)
         if cur.z_range.0 == 1 {
-            break;
+            return cur;
         }
 
         // Drop brick by one Z unit
@@ -48,31 +84,51 @@ fn get_brick_resting_position(brick: &Brick, all_bricks: &[Brick]) -> Brick {
         dropped.z_range.1 -= 1;
 
         // Abort if dropped brick collides with any of the other bricks (except itself)
-        if all_bricks
+        let supported_by: Vec<_> = all_bricks
             .iter()
-            .any(|b| *b != *brick && dropped.intersects_with(b))
-        {
-            // TODO: Set supported_by
-            break;
+            .filter(|b| **b != *brick && dropped.intersects_with(b))
+            .map(|b| b.id)
+            .collect();
+        if !supported_by.is_empty() {
+            cur.supported_by = supported_by;
+            return cur;
         }
 
         cur = dropped;
     }
-
-    cur
 }
 
 /// Lets all bricks fall down to their final resting position. Since the bricks are processed by rising lower Z coordinate, the result is
-/// a stable configuration where every brick is supported.
-fn get_stable_state(bricks: &[Brick]) -> Vec<Brick> {
-    todo!()
+/// a stable configuration where every brick is supported and the supported_by attributes of the bricks are set.
+fn get_stable_state(bricks: &mut Vec<Brick>) {
+    // Sort bricks by lower Z coordinate
+    bricks.sort_unstable_by_key(|b| b.z_range.0);
+
+    // For each brick, let it fall down (checking for collisions only with bricks that are below it in the input)
+    for i in 0..bricks.len() {
+        bricks[i] = get_brick_resting_position(&bricks[i], &bricks[0..i]);
+    }
 }
 
 fn main() {
-    let bricks = read_input_file("../inputs/day22_input.txt");
-    let bricks = get_stable_state(&bricks);
+    let mut bricks = read_input_file("../inputs/day22_input.txt");
+    get_stable_state(&mut bricks);
 
-    println!("Bricks that can be safely removed (first star): {}", 0);
+    println!(
+        "Bricks that can be safely removed (first star): {}",
+        bricks
+            .iter()
+            .filter(|b| check_brick_can_be_removed(b, &bricks))
+            .count()
+    );
+
+    println!(
+        "Sum of all bricks falling in chain reactions (second star): {}",
+        bricks
+            .iter()
+            .map(|b| chain_reaction_size(b, &bricks))
+            .sum::<usize>()
+    );
 }
 
 fn read_input_file<P: AsRef<Path>>(input_path: P) -> Vec<Brick> {
@@ -112,7 +168,27 @@ mod tests {
 
     #[test]
     fn example_first_star() {
-        let bricks = read_input_file("../inputs/day22_example.txt");
-        // TODO
+        let mut bricks = read_input_file("../inputs/day22_example.txt");
+        get_stable_state(&mut bricks);
+        assert_eq!(
+            bricks
+                .iter()
+                .filter(|b| check_brick_can_be_removed(b, &bricks))
+                .count(),
+            5
+        );
+    }
+
+    #[test]
+    fn example_second_star() {
+        let mut bricks = read_input_file("../inputs/day22_example.txt");
+        get_stable_state(&mut bricks);
+        assert_eq!(
+            bricks
+                .iter()
+                .map(|b| chain_reaction_size(b, &bricks))
+                .sum::<usize>(),
+            7
+        );
     }
 }
