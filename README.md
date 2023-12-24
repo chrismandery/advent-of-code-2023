@@ -35,3 +35,4 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 | 21  | Step Counter                    | [Solution](day19/src/main.rs) - second star missing |
 | 22  | Sand Slabs                      | [Solution](day22/src/main.rs) |
 | 23  | A Long Walk                     | [Solution](day23/src/main.rs) |
+| 24  | Never Tell Me The Odds          | TODO                          |
