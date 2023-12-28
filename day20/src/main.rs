@@ -4,14 +4,14 @@ use std::collections::{HashMap, VecDeque};
 use std::fs::read_to_string;
 use std::path::Path;
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 enum NodeState {
     Broadcaster,
     FlipFlop { cur_state: bool },
     Conjunction { input_states: HashMap<String, bool> },
 }
 
-#[derive(Debug)]
+#[derive(Clone, Debug)]
 struct Node {
     destinations: Vec<String>,
     state: NodeState,
@@ -30,14 +30,10 @@ impl Node {
             NodeState::Conjunction {
                 ref mut input_states,
             } => {
-                input_states
-                    .entry(pulse.source.clone())
-                    .and_modify(|x| {
-                        if !pulse.value {
-                            *x = !*x
-                        }
-                    })
-                    .or_insert_with(|| !pulse.value);
+                let v = input_states
+                    .get_mut(&pulse.source)
+                    .expect("Source not found for conjunction!");
+                *v = pulse.value;
 
                 !input_states.values().all(|x| *x)
             }
@@ -71,7 +67,7 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
         value: false,
     });
 
-    let pulse_count = (0, 0);
+    let mut pulse_count = (0, 0);
 
     while let Some(pulse) = pulse_queue.pop_front() {
         // Debug print
@@ -79,6 +75,12 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
             println!("{} -high-> {}", pulse.source, pulse.destination);
         } else {
             println!("{} -low-> {}", pulse.source, pulse.destination);
+        }
+
+        if pulse.value {
+            pulse_count.0 += 1;
+        } else {
+            pulse_count.1 += 1;
         }
 
         if pulse.destination == "output" {
@@ -91,7 +93,7 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
         let new_pulses = n.process_pulse(&pulse);
         pulse_queue.append(&mut VecDeque::from(new_pulses));
 
-        std::thread::sleep(std::time::Duration::from_secs(1));
+        std::thread::sleep(std::time::Duration::from_secs(1)); // TODO
     }
 
     pulse_count
@@ -124,7 +126,7 @@ fn read_input_file<P: AsRef<Path>>(input_path: P) -> Result<Nodes> {
     let re = Regex::new(r"^([a-z%&]+) -> ([a-z ,]+)$").unwrap();
 
     let input = read_to_string(input_path).expect("Could not open file!");
-    let res = input
+    let mut res: Nodes = input
         .lines()
         .filter_map(|l| {
             if let Some(cap) = re.captures(l) {
@@ -162,6 +164,24 @@ fn read_input_file<P: AsRef<Path>>(input_path: P) -> Result<Nodes> {
             }
         })
         .collect();
+
+    // Initialize conjunction nodes
+    let res_clone = res.clone();
+    for (name, node) in res.iter_mut() {
+        if let NodeState::Conjunction {
+            ref mut input_states,
+        } = node.state
+        {
+            for source_name in res_clone
+                .iter()
+                .filter(|(_, n)| n.destinations.contains(name))
+                .map(|(source_name, _)| source_name)
+            {
+                input_states.insert(source_name.to_string(), false);
+            }
+        }
+    }
+
     Ok(res)
 }
 
