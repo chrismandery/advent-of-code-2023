@@ -20,12 +20,14 @@ struct Node {
 impl Node {
     fn process_pulse(&mut self, pulse: &Pulse) -> Vec<Pulse> {
         let output_value = match self.state {
-            NodeState::Broadcaster => pulse.value,
+            NodeState::Broadcaster => Some(pulse.value),
             NodeState::FlipFlop { mut cur_state } => {
-                if !pulse.value {
+                if pulse.value {
+                    None
+                } else {
                     cur_state = !cur_state;
+                    Some(cur_state)
                 }
-                cur_state
             }
             NodeState::Conjunction {
                 ref mut input_states,
@@ -35,18 +37,22 @@ impl Node {
                     .expect("Source not found for conjunction!");
                 *v = pulse.value;
 
-                !input_states.values().all(|x| *x)
+                Some(!input_states.values().all(|x| *x))
             }
         };
 
-        self.destinations
-            .iter()
-            .map(|d| Pulse {
-                source: pulse.destination.to_string(),
-                destination: d.to_string(),
-                value: output_value,
-            })
-            .collect()
+        if let Some(val) = output_value {
+            self.destinations
+                .iter()
+                .map(|d| Pulse {
+                    source: pulse.destination.to_string(),
+                    destination: d.to_string(),
+                    value: val,
+                })
+                .collect()
+        } else {
+            vec![]
+        }
     }
 }
 
