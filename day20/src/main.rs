@@ -64,8 +64,12 @@ struct Pulse {
 
 type Nodes = HashMap<String, Node>;
 
-/// Pushes the button and processes all pulses, returning the number of high and low pulses.
-fn push_button(nodes: &mut Nodes) -> (usize, usize) {
+/// Pushes the button and processes all pulses, returning the number of high and low pulses. Optionally, abort if the node given in the
+/// second parameter sends a high value (if this happens, this is indicated in the third return value).
+fn push_button(
+    nodes: &mut Nodes,
+    abort_if_node_sends_high_pulse: Option<&str>,
+) -> (usize, usize, bool) {
     let mut pulse_queue = VecDeque::new();
     pulse_queue.push_back(Pulse {
         source: "".to_string(),
@@ -73,7 +77,7 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
         value: false,
     });
 
-    let mut pulse_count = (0, 0);
+    let (mut pulse_count_high, mut pulse_count_low) = (0, 0);
 
     while let Some(pulse) = pulse_queue.pop_front() {
         // Debug print
@@ -84,13 +88,19 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
         } */
 
         if pulse.value {
-            pulse_count.0 += 1;
+            pulse_count_high += 1;
         } else {
-            pulse_count.1 += 1;
+            pulse_count_low += 1;
         }
 
         if pulse.destination == "output" || pulse.destination == "rx" {
             continue; // Ignore pulses going to output
+        }
+
+        if let Some(abort_node) = abort_if_node_sends_high_pulse {
+            if pulse.source == abort_node && pulse.value {
+                return (pulse_count_high, pulse_count_low, true);
+            }
         }
 
         let n = nodes
@@ -100,27 +110,53 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
         pulse_queue.append(&mut VecDeque::from(new_pulses));
     }
 
-    pulse_count
+    (pulse_count_high, pulse_count_low, false)
 }
 
 /// Pushes the button n times, returning the number of high and low pulses.
 fn push_button_n_times(nodes: &mut Nodes, n: usize) -> (usize, usize) {
     let mut counts = (0, 0);
     for _ in 0..n {
-        let upd = push_button(nodes);
-        counts.0 += upd.0;
-        counts.1 += upd.1;
+        let (upd_high, upd_low, _) = push_button(nodes, None);
+        counts.0 += upd_high;
+        counts.1 += upd_low;
     }
     counts
 }
 
-fn main() -> Result<()> {
-    let mut nodes = read_input_file("../inputs/day20_input.txt")?;
+/// Counts the buttom presses that are necessary until the given node sends a high pulse.
+fn push_button_until_node_sends_high_pulse(nodes: &mut Nodes, node_name: &str) -> usize {
+    let mut n = 1;
+    while !push_button(nodes, Some(node_name)).2 {
+        n += 1;
+    }
+    n
+}
 
+fn main() -> Result<()> {
+    // First star
+    let mut nodes = read_input_file("../inputs/day20_input.txt")?;
     let counts = push_button_n_times(&mut nodes, 1000);
+
     println!(
         "Product of high and low pulse counts (first star): {}",
         counts.0 * counts.1
+    );
+
+    // Second star
+    // Use a list of nodes (hardcoded here) that must send a high pulse for a low pulse being sent to rx
+    // The solution is then the product of these button push counts (technically it should be LCM, but here it looks like LCM == product)
+    let rx_input_nodes = ["sr", "sn", "rf", "vq"];
+    let mut button_push_counts = vec![];
+
+    for node in rx_input_nodes {
+        let mut nodes = read_input_file("../inputs/day20_input.txt")?;
+        button_push_counts.push(push_button_until_node_sends_high_pulse(&mut nodes, node));
+    }
+
+    println!(
+        "Button presses required for rx low pulse: {}",
+        button_push_counts.iter().product::<usize>()
     );
 
     Ok(())
