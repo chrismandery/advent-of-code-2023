@@ -21,12 +21,12 @@ impl Node {
     fn process_pulse(&mut self, pulse: &Pulse) -> Vec<Pulse> {
         let output_value = match self.state {
             NodeState::Broadcaster => Some(pulse.value),
-            NodeState::FlipFlop { mut cur_state } => {
+            NodeState::FlipFlop { ref mut cur_state } => {
                 if pulse.value {
                     None
                 } else {
-                    cur_state = !cur_state;
-                    Some(cur_state)
+                    *cur_state = !*cur_state;
+                    Some(*cur_state)
                 }
             }
             NodeState::Conjunction {
@@ -77,11 +77,11 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
 
     while let Some(pulse) = pulse_queue.pop_front() {
         // Debug print
-        if pulse.value {
+        /* if pulse.value {
             println!("{} -high-> {}", pulse.source, pulse.destination);
         } else {
             println!("{} -low-> {}", pulse.source, pulse.destination);
-        }
+        } */
 
         if pulse.value {
             pulse_count.0 += 1;
@@ -89,7 +89,7 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
             pulse_count.1 += 1;
         }
 
-        if pulse.destination == "output" {
+        if pulse.destination == "output" || pulse.destination == "rx" {
             continue; // Ignore pulses going to output
         }
 
@@ -98,8 +98,6 @@ fn push_button(nodes: &mut Nodes) -> (usize, usize) {
             .unwrap_or_else(|| panic!("Node {} not found!", pulse.destination));
         let new_pulses = n.process_pulse(&pulse);
         pulse_queue.append(&mut VecDeque::from(new_pulses));
-
-        std::thread::sleep(std::time::Duration::from_secs(1)); // TODO
     }
 
     pulse_count
