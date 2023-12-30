@@ -32,8 +32,8 @@ Every package contains unit test(s) for the example(s) from the puzzle descripti
 | 18  | Lavaduct Lagoon                 | [Solution](day18/src/main.rs) |
 | 19  | Aplenty                         | [Solution](day19/src/main.rs) |
 | 20  | Pulse Propagation               | [Solution](day20/src/main.rs) |
-| 21  | Step Counter                    | [Solution](day19/src/main.rs) - second star missing |
+| 21  | Step Counter                    | [Solution](day21/src/main.rs) |
 | 22  | Sand Slabs                      | [Solution](day22/src/main.rs) |
 | 23  | A Long Walk                     | [Solution](day23/src/main.rs) |
-| 24  | Never Tell Me The Odds          | TODO                          |
-| 25  | Snowverload                     | TODO                          |
+| 24  | Never Tell Me The Odds          | [Solution](day24/src/main.rs) |
+| 25  | Snowverload                     | [Solution](day25/src/main.rs) |
