@@ -1,7 +1,8 @@
-use anyhow::Result;
+use anyhow::{anyhow, ensure, Result};
 use regex::Regex;
 use std::fs::read_to_string;
 use std::path::Path;
+use z3::ast::{Ast, Int};
 
 #[derive(Debug)]
 struct Hailstone {
@@ -50,10 +51,62 @@ fn count_hailstone_collisions_2d(hs: &[Hailstone], test_area: (i64, i64)) -> usi
 }
 
 /// Find position and valocity of a hailstone that is intercepting all given hailstones in their paths.
-/// We are solving this equation system (3 equations for each hailstone i):
+/// We are solving this equation system using Z3 (3 equations for each hailstone i):
 /// pos_interc + vel_interc * t_i = pos_i + vel_i * t_i  (with constraint t_i > 0)
-fn find_intercepting_hailstone(hs: &[Hailstone]) -> Hailstone {
-    todo!()
+fn find_intercepting_hailstone(all_hs: &[Hailstone]) -> Result<Hailstone> {
+    // Setup Z3
+    let context = z3::Context::new(&z3::Config::new());
+    let solver = z3::Solver::new(&context);
+
+    // Create constant zero and variables for intercepting hailstone
+    let zero = Int::from_i64(&context, 0);
+    let interc_pos_x = Int::new_const(&context, "interc_pos_x");
+    let interc_pos_y = Int::new_const(&context, "interc_pos_y");
+    let interc_pos_z = Int::new_const(&context, "interc_pos_z");
+    let interc_vel_x = Int::new_const(&context, "interc_vel_x");
+    let interc_vel_y = Int::new_const(&context, "interc_vel_y");
+    let interc_vel_z = Int::new_const(&context, "interc_vel_z");
+
+    // Add variables and constraints for all hailstones
+    for (i, hs) in all_hs.iter().enumerate() {
+        let hs_pos_x = Int::from_i64(&context, hs.pos[0]);
+        let hs_pos_y = Int::from_i64(&context, hs.pos[1]);
+        let hs_pos_z = Int::from_i64(&context, hs.pos[2]);
+        let hs_vel_x = Int::from_i64(&context, hs.vel[0]);
+        let hs_vel_y = Int::from_i64(&context, hs.vel[1]);
+        let hs_vel_z = Int::from_i64(&context, hs.vel[2]);
+        let t = Int::new_const(&context, format!("t_{}", i));
+
+        solver.assert(&t.ge(&zero));
+        solver.assert(&(&interc_pos_x + &interc_vel_x * &t)._eq(&(hs_pos_x + hs_vel_x * &t)));
+        solver.assert(&(&interc_pos_y + &interc_vel_y * &t)._eq(&(hs_pos_y + hs_vel_y * &t)));
+        solver.assert(&(&interc_pos_z + &interc_vel_z * &t)._eq(&(hs_pos_z + hs_vel_z * &t)));
+    }
+
+    // Check problem is solvable
+    ensure!(
+        solver.check() == z3::SatResult::Sat,
+        "Assertions of problem are not satisfiable! (should not happen)"
+    );
+
+    // Get position and velocity of hailstone
+    let model = solver
+        .get_model()
+        .ok_or(anyhow!("Could not get model from Z3!"))?;
+    let interc_hs = Hailstone {
+        pos: [
+            model.eval(&interc_pos_x, true).unwrap().as_i64().unwrap(),
+            model.eval(&interc_pos_y, true).unwrap().as_i64().unwrap(),
+            model.eval(&interc_pos_z, true).unwrap().as_i64().unwrap(),
+        ],
+        vel: [
+            model.eval(&interc_vel_x, true).unwrap().as_i64().unwrap(),
+            model.eval(&interc_vel_y, true).unwrap().as_i64().unwrap(),
+            model.eval(&interc_vel_z, true).unwrap().as_i64().unwrap(),
+        ],
+    };
+
+    Ok(interc_hs)
 }
 
 fn main() -> Result<()> {
@@ -66,7 +119,7 @@ fn main() -> Result<()> {
 
     println!(
         "Sum of position coordinates for intercepting hailstone (second star): {}",
-        find_intercepting_hailstone(&input).pos.iter().sum::<i64>()
+        find_intercepting_hailstone(&input)?.pos.iter().sum::<i64>()
     );
 
     Ok(())
@@ -118,7 +171,11 @@ mod tests {
     fn test_example_second_star() {
         let input = read_input_file("../inputs/day24_example.txt").unwrap();
         assert_eq!(
-            find_intercepting_hailstone(&input).pos.iter().sum::<i64>(),
+            find_intercepting_hailstone(&input)
+                .unwrap()
+                .pos
+                .iter()
+                .sum::<i64>(),
             47
         );
     }
