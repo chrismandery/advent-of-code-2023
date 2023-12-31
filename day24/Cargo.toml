@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 anyhow = "1"
 regex = "1"
+z3 = { version = "0.12", features = ["static-link-z3"] }
