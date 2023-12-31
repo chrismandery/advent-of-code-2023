@@ -9,48 +9,41 @@ struct Hailstone {
     vel: (i64, i64, i64),
 }
 
-/// Checks for a 2D hailstone collision (ignoring the Z component) by solving the following linear equation system:
-/// pos1_x + t * vel1_x = pos2_x + t * vel2_x
-/// pos1_y + t * vel1_y = pos2_y + t * vel2_y
-/// First equation is equal two:
-/// t * (vel1_x - vel2_x) = pos2_x - pos1_x
-/// <=> t = (pos2_x - pos1_x) / (vel1_x - vel2_x)
+/// Checks for a 2D hailstone collision (ignoring the Z component).
 fn check_hailstone_collision_2d(hs1: &Hailstone, hs2: &Hailstone, test_area: (i64, i64)) -> bool {
-    // Check for parallel movement (would be division by zero in the code below)
-    if hs1.vel.0 == hs2.vel.0 || hs1.vel.1 == hs2.vel.1 {
+    let dx = hs2.pos.0 - hs1.pos.0;
+    let dy = hs2.pos.1 - hs1.pos.1;
+    let cp = (hs2.vel.0 * hs1.vel.1 - hs2.vel.1 * hs1.vel.0) as f64;
+
+    if cp <= 0.0000001 {
         return false;
     }
 
-    dbg!(&hs1);
-    dbg!(&hs2);
+    let u = (dy * hs2.vel.0 - dx * hs2.vel.1) as f64 / cp;
+    let v = (dy * hs1.vel.0 - dx * hs1.vel.1) as f64 / cp;
 
-    let t1 = (hs2.pos.0 - hs1.pos.0) as f64 / (hs1.vel.0 - hs2.vel.0) as f64;
-    let t2 = (hs2.pos.1 - hs1.pos.1) as f64 / (hs1.vel.1 - hs2.vel.1) as f64;
-    dbg!(&t1);
-    dbg!(&t2);
-
-    if t1 == t2 {
-        let pos_col = (
-            hs1.pos.0 as f64 + t1 * hs1.vel.0 as f64,
-            hs1.pos.1 as f64 + t2 * hs1.vel.1 as f64,
-        );
-        pos_col.0 >= test_area.0 as f64
-            && pos_col.0 <= test_area.1 as f64
-            && pos_col.1 >= test_area.0 as f64
-            && pos_col.1 <= test_area.1 as f64
-    } else {
-        false
+    if u < 0.0 || v < 0.0 {
+        return false;
     }
+
+    let pos_col = (
+        hs1.pos.0 as f64 + u * hs1.vel.0 as f64,
+        hs1.pos.1 as f64 + u * hs1.vel.1 as f64,
+    );
+
+    pos_col.0 >= test_area.0 as f64
+        && pos_col.0 <= test_area.1 as f64
+        && pos_col.1 >= test_area.0 as f64
+        && pos_col.1 <= test_area.1 as f64
 }
 
 fn count_hailstone_collisions_2d(hs: &[Hailstone], test_area: (i64, i64)) -> usize {
     let mut collisions = 0;
-    for i in 1..hs.len() {
-        for j in 0..i {
-            if check_hailstone_collision_2d(&hs[i], &hs[j], test_area) {
+    for i in 0..hs.len() {
+        for j in 0..hs.len() {
+            if i != j && check_hailstone_collision_2d(&hs[i], &hs[j], test_area) {
                 collisions += 1;
             }
-            return collisions;
         }
     }
     collisions
